@@ -1,0 +1,58 @@
+import pandas as pd
+import sqlite3
+import numpy as np
+
+############################################
+# LOAD PRICES
+############################################
+
+conn = sqlite3.connect("market_warehouse.db")
+prices = pd.read_sql("SELECT * FROM prices", conn)
+conn.close()
+
+prices["date"] = pd.to_datetime(prices["date"], utc=True)
+prices["date"] = prices["date"].dt.tz_convert(None)
+prices["date"] = prices["date"].dt.strftime("%Y-%m-%d")
+prices = prices.sort_values(["ticker", "date"])
+
+############################################
+# RETURNS
+############################################
+
+prices["return"] = prices.groupby("ticker")["Close"].pct_change()
+
+############################################
+# MOMENTUM
+############################################
+
+prices["mom_3m"] = prices.groupby("ticker")["Close"].pct_change(63)
+prices["mom_6m"] = prices.groupby("ticker")["Close"].pct_change(126)
+prices["mom_12m"] = prices.groupby("ticker")["Close"].pct_change(252)
+
+############################################
+# VOLATILITY
+############################################
+
+prices["vol_6m"] = (
+    prices.groupby("ticker")["return"]
+    .rolling(126)
+    .std()
+    .reset_index(level=0, drop=True)
+)
+
+############################################
+# SAVE
+############################################
+
+conn = sqlite3.connect("market_warehouse.db")
+
+prices.to_sql(
+    "price_factors",
+    conn,
+    if_exists="replace",
+    index=False
+)
+
+conn.close()
+
+print("Price factors built.")
