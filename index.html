@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Alpha</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1117;color:#e0e0e0;min-height:100vh;font-size:14px}
+input,button{font-family:inherit;font-size:13px;outline:none}
+input{background:#1e2130;border:1px solid #2a2d3a;color:#e0e0e0;padding:7px 11px;border-radius:8px}
+input:focus{border-color:#7c6af7}
+button{cursor:pointer;border-radius:8px;border:none;padding:7px 14px;transition:opacity .15s}
+button:hover{opacity:.85}
+.btn-primary{background:#7c6af7;color:#fff;font-weight:500}
+.btn-ghost{background:transparent;border:1px solid #2a2d3a;color:#9ca3af;padding:5px 11px}
+.btn-ghost:hover{color:#e0e0e0}
+nav{background:#141720;border-bottom:1px solid #1f2230;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.nav-brand{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.ndot{width:8px;height:8px;border-radius:50%;background:#4ade80}
+.nav-tabs{display:flex}
+.nav-tab{padding:0 1rem;height:52px;display:flex;align-items:center;font-size:13px;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;position:relative}
+.nav-tab:hover{color:#e0e0e0}
+.nav-tab.active{color:#e0e0e0;border-bottom-color:#7c6af7}
+.nbadge{position:absolute;top:10px;right:5px;background:#4ade80;color:#14532d;font-size:9px;font-weight:700;border-radius:20px;padding:1px 5px}
+.nav-right{display:flex;align-items:center;gap:8px}
+.page{display:none;max-width:1000px;margin:0 auto;padding:1.5rem}
+.page.active{display:block}
+.page-title{font-size:18px;font-weight:600;margin-bottom:4px}
+.page-sub{font-size:12px;color:#6b7280;margin-bottom:1.25rem}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.stat-card{background:#141720;border:1px solid #1f2230;border-radius:10px;padding:12px 16px}
+.stat-label{font-size:11px;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.stat-value{font-size:20px;font-weight:600}
+.green{color:#4ade80}.yellow{color:#fbbf24}.purple{color:#a78bfa}.red{color:#f87171}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid #2a2d3a;color:#6b7280;cursor:pointer;background:transparent}
+.pill:hover{color:#e0e0e0;border-color:#3a3d4a}
+.pill.active{background:#7c6af7;border-color:#7c6af7;color:#fff}
+.sec-header{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin:1.25rem 0 .5rem;display:flex;align-items:center;gap:8px}
+.sec-line{flex:1;height:1px;background:#1f2230}
+.scard{background:#1a1d26;border:1px solid #1f2230;border-left:3px solid transparent;border-radius:0 12px 12px 0;padding:12px 14px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.scard:hover{border-color:#2a2d3a}
+.scard.strong{border-left-color:#4ade80}
+.scard.lean{border-left-color:#fbbf24}
+.scard.pass{border-left-color:#374151}
+.sc-top{display:flex;align-items:center;justify-content:space-between}
+.sc-left{display:flex;align-items:center;gap:8px}
+.sc-ticker{font-size:14px;font-weight:600}
+.sc-sector{font-size:10px;color:#6b7280;background:#141720;padding:2px 7px;border-radius:20px}
+.sc-right{display:flex;align-items:center;gap:8px}
+.sc-prob{font-size:14px;font-weight:600}
+.sc-prob.strong{color:#4ade80}.sc-prob.lean{color:#fbbf24}.sc-prob.pass{color:#6b7280}
+.badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:.3px}
+.badge.strong{background:#14532d;color:#4ade80}
+.badge.lean{background:#78350f;color:#fbbf24}
+.badge.pass{background:#1f2937;color:#6b7280}
+.badge.port{background:#1e3a5f;color:#60a5fa}
+.add-btn{width:22px;height:22px;border-radius:50%;border:1px solid #2a2d3a;background:transparent;color:#6b7280;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0}
+.add-btn:hover{border-color:#4ade80;color:#4ade80;background:#14532d22}
+.add-btn.on{border-color:#4ade80;color:#4ade80;background:#14532d44}
+.sc-meta{margin-top:6px;font-size:11px;color:#6b7280;display:flex;gap:14px}
+.sc-meta span{color:#d1d5db}
+.rtoggle{font-size:11px;color:#6b7280;margin-top:5px;background:none;border:none;padding:0;cursor:pointer}
+.rtoggle:hover{color:#e0e0e0}
+.rbox{display:none;margin-top:8px;padding:8px 10px;background:#141720;border-radius:8px}
+.rbox.open{display:block}
+.ritem{font-size:11px;color:#9ca3af;padding:2px 0 2px 14px;position:relative}
+.ritem::before{content:"→";position:absolute;left:0;font-size:10px;color:#6b7280}
+.search-banner{display:none;background:#1a2a1a;border:1px solid #2d6a4a;border-radius:8px;padding:8px 14px;margin-bottom:1rem;font-size:12px;color:#4ade80;align-items:center;justify-content:space-between}
+.search-banner.show{display:flex}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:#1a1d26;border:1px solid #2a2d3a;border-radius:16px;width:100%;max-width:580px;padding:1.5rem}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}
+.modal-ticker{font-size:24px;font-weight:700}
+.modal-sector{font-size:12px;color:#6b7280;margin-top:3px}
+.modal-prob{font-size:26px;font-weight:700}
+.modal-close{font-size:18px;color:#6b7280;background:none;border:none;cursor:pointer}
+.pbar-bg{background:#141720;border-radius:20px;height:6px;margin:8px 0 1rem}
+.pbar{height:100%;border-radius:20px;transition:width .4s}
+.msec{margin-top:1rem}
+.msec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:8px}
+.rlist{list-style:none;padding:0}
+.rlist li{font-size:12px;color:#9ca3af;padding:4px 0 4px 16px;border-bottom:1px solid #1f2230;position:relative}
+.rlist li::before{content:"→";position:absolute;left:0;color:#6b7280;font-size:11px}
+.rlist li:last-child{border:none}
+.mg2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mrow{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #1f2230}
+.mrow:last-child{border:none}
+.mrow-name{color:#6b7280}
+.mrow-val{font-weight:500}
+.mrow-val.pos{color:#4ade80}.mrow-val.neg{color:#f87171}
+.peer-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #1f2230}
+.peer-row:last-child{border:none}
+.peer-t{font-weight:600;cursor:pointer}
+.peer-t:hover{color:#7c6af7}
+.peer-t.cur{color:#4ade80}
+.modal-add-btn{width:100%;margin-top:1rem;padding:9px;border-radius:8px;background:#14532d44;color:#4ade80;border:1px solid #4ade80;cursor:pointer;font-weight:500;font-size:13px}
+.modal-add-btn:hover{background:#14532d88}
+.modal-add-btn.added{background:#1f2937;color:#6b7280;border-color:#2a2d3a}
+.port-card{background:#1a1d26;border:1px solid #1f2230;border-radius:12px;padding:14px 16px;margin-bottom:8px}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.pstat{background:#141720;border-radius:8px;padding:8px 10px}
+.pstat-label{font-size:10px;color:#6b7280;margin-bottom:2px;text-transform:uppercase;letter-spacing:.3px}
+.pstat-val{font-size:13px;font-weight:600}
+.run-card{background:#1a1d26;border:1px solid #1f2230;border-radius:12px;margin-bottom:8px;overflow:hidden}
+.run-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer}
+.run-header:hover{background:#1f2230}
+.run-body{display:none;border-top:1px solid #1f2230;padding:12px 16px}
+.run-body.open{display:block}
+.htbl{width:100%;border-collapse:collapse;font-size:12px}
+.htbl th{text-align:left;padding:6px 10px;color:#6b7280;border-bottom:1px solid #1f2230;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.htbl td{padding:6px 10px;border-bottom:1px solid #141720}
+.htbl tr:hover td{background:#1f2230}
+.correct{color:#4ade80}.wrong{color:#f87171}
+.log-box{background:#0f1117;border:1px solid #1f2230;border-radius:8px;padding:1rem;font-family:'Courier New',monospace;font-size:11px;color:#4ade80;height:220px;overflow-y:auto;white-space:pre-wrap;margin-top:1rem}
+.loading{text-align:center;padding:3rem;color:#6b7280;font-size:13px}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1a1d26;border:1px solid #2a2d3a;border-radius:8px;padding:10px 16px;font-size:13px;z-index:500;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.empty{text-align:center;padding:3rem;color:#6b7280}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<nav>
+  <div class="nav-brand"><div class="ndot"></div>Stock Alpha</div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showPage('dashboard',this)">Dashboard</div>
+    <div class="nav-tab" onclick="showPage('portfolio',this)">Portfolio<span class="nbadge" id="port-badge" style="display:none">0</span></div>
+    <div class="nav-tab" onclick="showPage('runs',this)">Previous runs</div>
+    <div class="nav-tab" onclick="showPage('history',this)">Holdout history</div>
+    <div class="nav-tab" onclick="showPage('run-pipeline',this)">Run pipeline</div>
+  </div>
+  <div class="nav-right">
+    <input id="search-input" type="text" placeholder="Search any ticker (e.g. AAPL)..." style="width:210px" onkeydown="if(event.key==='Enter')doSearch()">
+    <button class="btn-primary" onclick="doSearch()">Search</button>
+  </div>
+</nav>
+
+<div id="page-dashboard" class="page active">
+  <div class="page-title">Live predictions</div>
+  <div class="page-sub" id="dash-sub">Loading predictions...</div>
+  <div class="stats-row" id="dash-stats"></div>
+  <div class="search-banner" id="search-banner">
+    <span id="search-banner-text"></span>
+    <button onclick="clearSearch()" style="background:none;border:none;color:#4ade80;font-size:16px;cursor:pointer">✕</button>
+  </div>
+  <div class="pills" id="sector-pills"><div class="pill active" onclick="filterSector('all',this)">All sectors</div></div>
+  <div id="stocks-container"><div class="loading">Fetching predictions from database...</div></div>
+</div>
+
+<div id="page-portfolio" class="page">
+  <div class="page-title">My portfolio</div>
+  <div class="page-sub">Stocks you are tracking — confidence updates every quarter</div>
+  <div id="portfolio-content"></div>
+</div>
+
+<div id="page-runs" class="page">
+  <div class="page-title">Previous runs</div>
+  <div class="page-sub">Every quarterly pipeline run saved — compare predictions over time</div>
+  <div id="runs-content"><div class="loading">Loading run history...</div></div>
+</div>
+
+<div id="page-history" class="page">
+  <div class="page-title">Holdout history</div>
+  <div class="page-sub">Predictions during the 6-month holdout vs what actually happened</div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Total predictions</div><div class="stat-value">1,521</div></div>
+    <div class="stat-card"><div class="stat-label">Overall accuracy</div><div class="stat-value">56.6%</div></div>
+    <div class="stat-card"><div class="stat-label">High-conf calls</div><div class="stat-value">33</div></div>
+    <div class="stat-card"><div class="stat-label">High-conf accuracy</div><div class="stat-value green">87.9%</div></div>
+  </div>
+  <div style="background:#1a1d26;border:1px solid #1f2230;border-radius:12px;overflow:hidden">
+    <table class="htbl">
+      <thead><tr><th>Ticker</th><th>Sector</th><th>Date</th><th>Confidence</th><th>Actual 6M</th><th>Outperformed?</th><th>Correct?</th></tr></thead>
+      <tbody id="history-body"><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="page-run-pipeline" class="page">
+  <div class="page-title">Run pipeline</div>
+  <div class="page-sub">Trigger a fresh prediction run. Auto-runs Jan 1, Apr 1, Jul 1, Oct 1 at 2AM.</div>
+  <div style="background:#1a1d26;border:1px solid #1f2230;border-radius:12px;padding:1.25rem">
+    <div style="font-size:13px;color:#9ca3af;margin-bottom:1rem">Fetches fresh data from SEC EDGAR + Yahoo Finance, retrains the model, saves predictions to PostgreSQL, and archives to Previous runs.</div>
+    <button class="btn-primary" id="run-btn" onclick="runPipeline()">Run live predictions now</button>
+    <span id="run-status" style="margin-left:1rem;font-size:12px;color:#6b7280"></span>
+    <div class="log-box" id="log-box">Waiting to start...</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+let allStocks = [];
+let portfolio = JSON.parse(localStorage.getItem('sa_portfolio') || '{}');
+let prevRuns  = [];
+let curSector = 'all';
+let searchMode = false;
+let runPoll = null;
+
+const sig  = p => p >= 0.65 ? 'strong' : p >= 0.45 ? 'lean' : 'pass';
+const sigU = p => sig(p).toUpperCase();
+const pct  = p => (p * 100).toFixed(1) + '%';
+const sp   = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%';
+const fmtM = v => v >= 1e12 ? '$' + (v/1e12).toFixed(1) + 'T' : v >= 1e9 ? '$' + (v/1e9).toFixed(1) + 'B' : '$' + (v/1e6).toFixed(0) + 'M';
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function savePortfolio() {
+  localStorage.setItem('sa_portfolio', JSON.stringify(portfolio));
+  const n = Object.keys(portfolio).length;
+  const b = document.getElementById('port-badge');
+  b.textContent = n; b.style.display = n > 0 ? '' : 'none';
+}
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  if (id === 'portfolio') renderPortfolio();
+  if (id === 'runs')      loadRuns();
+  if (id === 'history')   loadHistory();
+}
+
+async function get(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function post(url, body) {
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function loadPredictions() {
+  try {
+    allStocks = await get('/api/predictions');
+    renderDashboard();
+  } catch(e) {
+    document.getElementById('stocks-container').innerHTML =
+      '<div class="loading">Error: ' + e.message + '<br><br>Make sure live_predictions.py has been run on the server.</div>';
+  }
+}
+
+function renderDashboard(searchTicker = null) {
+  const container = document.getElementById('stocks-container');
+  const sectors = [...new Set(allStocks.map(s => s.sector))].sort();
+
+  const pills = document.getElementById('sector-pills');
+  if (pills.children.length <= 1) {
+    sectors.forEach(s => {
+      const el = document.createElement('div');
+      el.className = 'pill'; el.textContent = s;
+      el.onclick = () => filterSector(s, el);
+      pills.appendChild(el);
+    });
+  }
+
+  const strong = allStocks.filter(s => s.outperform_prob >= 0.65);
+  const date = allStocks[0]?.date ? String(allStocks[0].date).slice(0, 10) : 'N/A';
+  document.getElementById('dash-sub').textContent =
+    `Snapshot: ${date} · Horizon: 6 months forward · ${allStocks.length} stocks tracked · Showing top 8 per sector`;
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Strong signals</div><div class="stat-value green">${strong.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Threshold</div><div class="stat-value purple">65%</div></div>
+    <div class="stat-card"><div class="stat-label">Holdout accuracy</div><div class="stat-value green">87.9%</div></div>
+    <div class="stat-card"><div class="stat-label">OOS AUC</div><div class="stat-value">0.572</div></div>`;
+
+  let display;
+  if (searchTicker) {
+    display = allStocks.filter(s => s.ticker === searchTicker);
+    searchMode = true;
+    const s = display[0];
+    document.getElementById('search-banner-text').textContent = s
+      ? `Showing "${searchTicker}" — ${pct(s.outperform_prob)} (${sigU(s.outperform_prob)}) in ${s.sector}`
+      : `"${searchTicker}" not found in current predictions`;
+    document.getElementById('search-banner').classList.add('show');
+    if (!s) { container.innerHTML = ''; return; }
+  } else {
+    const top8 = [];
+    sectors.forEach(sec => {
+      allStocks.filter(s => s.sector === sec)
+        .sort((a,b) => b.outperform_prob - a.outperform_prob)
+        .slice(0, 8).forEach(s => top8.push(s));
+    });
+    display = curSector === 'all' ? top8 : top8.filter(s => s.sector === curSector);
+  }
+
+  const groups = { strong: [], lean: [], pass: [] };
+  display.forEach(s => groups[sig(s.outperform_prob)].push(s));
+  container.innerHTML = '';
+  const rend = (list, label, count) => {
+    if (!list.length) return;
+    container.innerHTML += `<div class="sec-header">${label}<div class="sec-line"></div><span style="font-size:10px">${count}</span></div>`;
+    list.forEach(s => container.innerHTML += stockCard(s));
+  };
+  rend(groups.strong, 'Strong signals', groups.strong.length + ' stocks ≥ 65%');
+  rend(groups.lean,   'Lean signals',   groups.lean.length   + ' stocks 45–65%');
+  rend(groups.pass,   'Pass',           groups.pass.length   + ' stocks < 45%');
+}
+
+function stockCard(s) {
+  const sg = sig(s.outperform_prob);
+  const ip = !!portfolio[s.ticker];
+  return `<div class="scard ${sg}" onclick="openModal('${s.ticker}')">
+    <div class="sc-top">
+      <div class="sc-left">
+        <span class="sc-ticker">${s.ticker}</span>
+        <span class="sc-sector">${s.sector}</span>
+        ${ip ? '<span class="badge port">In portfolio</span>' : ''}
+      </div>
+      <div class="sc-right">
+        <span class="sc-prob ${sg}">${pct(s.outperform_prob)}</span>
+        <span class="badge ${sg}">${sg.toUpperCase()}</span>
+        <button class="add-btn ${ip ? 'on' : ''}" onclick="event.stopPropagation();togglePort('${s.ticker}')">${ip ? '−' : '+'}</button>
+      </div>
+    </div>
+    <div class="sc-meta">
+      <div>6M <span>${sp(s.mom_6m || 0)}</span></div>
+      <div>3M <span>${sp(s.mom_3m || 0)}</span></div>
+      <div>ROA <span>${((s.roa || 0)*100).toFixed(1)}%</span></div>
+      <div>Rev <span>${sp(s.revenue_yoy || 0)}</span></div>
+    </div>
+    ${sg !== 'pass' ? `
+    <button class="rtoggle" onclick="event.stopPropagation();document.getElementById('rb-${s.ticker}').classList.toggle('open')">Show reasoning ▾</button>
+    <div class="rbox" id="rb-${s.ticker}">
+      ${(s.reasons || []).map(r => `<div class="ritem">${r}</div>`).join('')}
+    </div>` : ''}
+  </div>`;
+}
+
+function filterSector(s, el) {
+  curSector = s; searchMode = false;
+  document.getElementById('search-banner').classList.remove('show');
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderDashboard();
+}
+
+function clearSearch() {
+  searchMode = false;
+  document.getElementById('search-banner').classList.remove('show');
+  renderDashboard();
+}
+
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim().toUpperCase();
+  if (!q) return;
+  document.getElementById('search-input').value = '';
+  showPage('dashboard', document.querySelector('.nav-tab'));
+  renderDashboard(q);
+}
+
+function openModal(ticker) {
+  const s = allStocks.find(x => x.ticker === ticker);
+  if (!s) return;
+  const sg = sig(s.outperform_prob);
+  const ip = !!portfolio[ticker];
+  const peers = allStocks.filter(x => x.sector === s.sector)
+    .sort((a,b) => b.outperform_prob - a.outperform_prob).slice(0, 6);
+  const color = sg === 'strong' ? '#4ade80' : sg === 'lean' ? '#fbbf24' : '#6b7280';
+  const runHist = prevRuns.flatMap(r => {
+    const rs = (r.stocks || []).find(x => x.ticker === ticker);
+    return rs ? [{ date: r.run_date, prob: rs.outperform_prob, signal: rs.signal }] : [];
+  });
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <div>
+        <div class="modal-ticker">${ticker} <span class="badge ${sg}">${sg.toUpperCase()}</span></div>
+        <div class="modal-sector">${s.sector}</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <div class="modal-prob" style="color:${color}">${pct(s.outperform_prob)}</div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="pbar-bg"><div class="pbar" style="width:${pct(s.outperform_prob)};background:${color}"></div></div>
+
+    <div class="msec">
+      <div class="msec-title">Why the model picked this stock</div>
+      <ul class="rlist">${(s.reasons || []).map(r => `<li>${r}</li>`).join('')}</ul>
+    </div>
+
+    <div class="msec">
+      <div class="msec-title">Key metrics</div>
+      <div class="mg2">
+        <div>
+          <div class="mrow"><span class="mrow-name">6M momentum</span><span class="mrow-val ${(s.mom_6m||0)>=0?'pos':'neg'}">${sp(s.mom_6m||0)}</span></div>
+          <div class="mrow"><span class="mrow-name">3M momentum</span><span class="mrow-val ${(s.mom_3m||0)>=0?'pos':'neg'}">${sp(s.mom_3m||0)}</span></div>
+          <div class="mrow"><span class="mrow-name">Return on assets</span><span class="mrow-val ${(s.roa||0)>0.05?'pos':''}">${((s.roa||0)*100).toFixed(1)}%</span></div>
+          <div class="mrow"><span class="mrow-name">Return on equity</span><span class="mrow-val ${(s.roe||0)>0.10?'pos':''}">${((s.roe||0)*100).toFixed(1)}%</span></div>
+        </div>
+        <div>
+          <div class="mrow"><span class="mrow-name">Revenue growth</span><span class="mrow-val ${(s.revenue_yoy||0)>=0?'pos':'neg'}">${sp(s.revenue_yoy||0)}</span></div>
+          <div class="mrow"><span class="mrow-name">Operating margin</span><span class="mrow-val ${(s.operating_margin||0)>0.10?'pos':''}">${((s.operating_margin||0)*100).toFixed(1)}%</span></div>
+          <div class="mrow"><span class="mrow-name">Market cap</span><span class="mrow-val">${s.market_cap ? fmtM(s.market_cap) : 'N/A'}</span></div>
+          <div class="mrow"><span class="mrow-name">Earnings quality</span><span class="mrow-val">${((s.earnings_quality||0)).toFixed(3)}</span></div>
+        </div>
+      </div>
+    </div>
+
+    ${runHist.length ? `<div class="msec">
+      <div class="msec-title">Signal across previous runs</div>
+      ${runHist.map(h => `<div class="peer-row">
+        <span style="color:#6b7280">${h.date}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span>${pct(h.prob)}</span>
+          <span class="badge ${(h.signal||'pass').toLowerCase()}">${h.signal||'PASS'}</span>
+        </div>
+      </div>`).join('')}
+      <div class="peer-row">
+        <span style="font-weight:500">Current</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-weight:500">${pct(s.outperform_prob)}</span>
+          <span class="badge ${sg}">${sg.toUpperCase()}</span>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <div class="msec">
+      <div class="msec-title">Sector peers — ${s.sector}</div>
+      ${peers.map(p => `<div class="peer-row">
+        <span class="peer-t ${p.ticker===ticker?'cur':''}" onclick="openModal('${p.ticker}')">${p.ticker}${p.ticker===ticker?' ← this':''}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px">${pct(p.outperform_prob)}</span>
+          <span class="badge ${sig(p.outperform_prob)}">${sigU(p.outperform_prob)}</span>
+        </div>
+      </div>`).join('')}
+    </div>
+
+    <button id="port-modal-btn" class="modal-add-btn ${ip?'added':''}" onclick="togglePort('${ticker}');updateModalBtn('${ticker}')">
+      ${ip ? '− Remove from portfolio' : '+ Add to portfolio'}
+    </button>`;
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function updateModalBtn(ticker) {
+  const btn = document.getElementById('port-modal-btn');
+  if (!btn) return;
+  const ip = !!portfolio[ticker];
+  btn.textContent = ip ? '− Remove from portfolio' : '+ Add to portfolio';
+  btn.className = 'modal-add-btn' + (ip ? ' added' : '');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function togglePort(ticker) {
+  const s = allStocks.find(x => x.ticker === ticker);
+  if (!s) return;
+  if (portfolio[ticker]) {
+    delete portfolio[ticker]; toast(ticker + ' removed from portfolio');
+  } else {
+    portfolio[ticker] = {
+      ticker, sector: s.sector, prob: s.outperform_prob,
+      addedDate: new Date().toISOString().slice(0,10),
+      addedProb: s.outperform_prob, signal: sig(s.outperform_prob),
+    };
+    toast(ticker + ' added to portfolio');
+  }
+  savePortfolio();
+  renderDashboard(searchMode ? document.getElementById('search-banner-text').textContent.match(/"([^"]+)"/)?.[1] : null);
+  if (document.getElementById('page-portfolio').classList.contains('active')) renderPortfolio();
+}
+
+function renderPortfolio() {
+  const c = document.getElementById('portfolio-content');
+  const keys = Object.keys(portfolio);
+  if (!keys.length) {
+    c.innerHTML = `<div class="empty"><div style="font-size:36px;margin-bottom:.75rem;color:#374151">[ ]</div><div style="font-weight:600;margin-bottom:6px">No stocks in portfolio yet</div><div style="font-size:12px;color:#6b7280">Click the + icon beside any ticker on the dashboard to track it here.</div></div>`;
+    return;
+  }
+  const avg = keys.reduce((a,k) => a + portfolio[k].prob, 0) / keys.length;
+  const strong = keys.filter(k => portfolio[k].signal === 'strong').length;
+  c.innerHTML = `<div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Holdings</div><div class="stat-value">${keys.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Strong signals</div><div class="stat-value green">${strong}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg confidence</div><div class="stat-value purple">${(avg*100).toFixed(1)}%</div></div>
+    <div class="stat-card"><div class="stat-label">Next update</div><div class="stat-value" style="font-size:14px">Jul 1 2026</div></div>
+  </div>`;
+
+  keys.forEach(k => {
+    const p = portfolio[k];
+    const s = allStocks.find(x => x.ticker === k) || {};
+    const curProb = s.outperform_prob ?? p.prob;
+    const curSg = sig(curProb);
+    const delta = curProb - p.addedProb;
+    const runHist = prevRuns.flatMap(r => {
+      const rs = (r.stocks || []).find(x => x.ticker === k);
+      return rs ? [{ date: r.run_date, prob: rs.outperform_prob, signal: rs.signal }] : [];
+    });
+    c.innerHTML += `<div class="port-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:15px;font-weight:600">${k}</span>
+          <span class="sc-sector">${p.sector}</span>
+          <span class="badge ${curSg}">${curSg.toUpperCase()}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:#6b7280">Added ${p.addedDate}</span>
+          <button class="btn-ghost" onclick="togglePort('${k}')" style="font-size:11px;color:#f87171;border-color:#4b2020">Remove</button>
+        </div>
+      </div>
+      <div class="pgrid">
+        <div class="pstat"><div class="pstat-label">Confidence</div><div class="pstat-val ${curSg==='strong'?'green':curSg==='pass'?'red':''}">${pct(curProb)}</div></div>
+        <div class="pstat"><div class="pstat-label">Change</div><div class="pstat-val ${delta>=0?'green':'red'}">${delta>=0?'+':''}${(delta*100).toFixed(1)}%</div></div>
+        <div class="pstat"><div class="pstat-label">6M momentum</div><div class="pstat-val ${(s.mom_6m||0)>=0?'green':'red'}">${sp(s.mom_6m||0)}</div></div>
+        <div class="pstat"><div class="pstat-label">Added signal</div><div class="pstat-val">${p.signal.toUpperCase()}</div></div>
+      </div>
+      ${runHist.length ? `<div style="border-top:1px solid #1f2230;padding-top:10px">
+        <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Signal history</div>
+        ${runHist.map(h => `<div class="peer-row">
+          <span style="color:#6b7280">${h.date}</span>
+          <div style="display:flex;align-items:center;gap:5px">
+            <span>${pct(h.prob)}</span>
+            <span class="badge ${(h.signal||'pass').toLowerCase()}">${h.signal||'PASS'}</span>
+          </div>
+        </div>`).join('')}
+        <div class="peer-row">
+          <span style="font-weight:500">Current</span>
+          <div style="display:flex;align-items:center;gap:5px">
+            <span style="font-weight:500">${pct(curProb)}</span>
+            <span class="badge ${curSg}">${curSg.toUpperCase()}</span>
+          </div>
+        </div>
+      </div>` : ''}
+    </div>`;
+  });
+}
+
+async function loadRuns() {
+  const c = document.getElementById('runs-content');
+  try {
+    prevRuns = await get('/api/runs');
+    if (!prevRuns.length) {
+      c.innerHTML = '<div class="loading">No previous runs yet. Run the pipeline to create the first entry.</div>';
+      return;
+    }
+    c.innerHTML = '';
+    prevRuns.forEach((run, i) => {
+      const strong = (run.stocks || []).filter(s => s.signal === 'STRONG');
+      c.innerHTML += `<div class="run-card">
+        <div class="run-header" onclick="document.getElementById('rb${i}').classList.toggle('open');this.querySelector('.arr').style.transform=document.getElementById('rb${i}').classList.contains('open')?'rotate(180deg)':''">
+          <div>
+            <div style="font-size:14px;font-weight:600">${run.run_date}</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px">${run.n_total} stocks · archived to prediction_runs table</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="display:flex;gap:12px">
+              <div style="text-align:center"><div style="font-size:14px;font-weight:600;color:#4ade80">${run.n_strong}</div><div style="font-size:10px;color:#6b7280">Strong</div></div>
+              <div style="text-align:center"><div style="font-size:14px;font-weight:600;color:#fbbf24">${run.n_lean}</div><div style="font-size:10px;color:#6b7280">Lean</div></div>
+              <div style="text-align:center"><div style="font-size:14px;font-weight:600;color:#6b7280">${run.n_pass}</div><div style="font-size:10px;color:#6b7280">Pass</div></div>
+            </div>
+            <div class="arr" style="color:#6b7280;transition:transform .2s">▾</div>
+          </div>
+        </div>
+        <div class="run-body" id="rb${i}">
+          ${strong.length ? `<div style="margin-bottom:.75rem">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#6b7280;margin-bottom:7px">Strong signals</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">${strong.map(s => `<div onclick="openModal('${s.ticker}')" style="display:flex;align-items:center;gap:5px;background:#141720;border:1px solid #1f2230;padding:5px 10px;border-radius:8px;cursor:pointer"><span style="font-size:12px;font-weight:600">${s.ticker}</span><span class="badge strong">${pct(s.outperform_prob)}</span></div>`).join('')}</div>
+          </div>` : ''}
+          <table class="htbl">
+            <thead><tr><th>Ticker</th><th>Sector</th><th>Confidence</th><th>Signal</th></tr></thead>
+            <tbody>${(run.stocks || []).map(s => `<tr>
+              <td style="font-weight:600;cursor:pointer" onclick="openModal('${s.ticker}')">${s.ticker}</td>
+              <td style="color:#6b7280;font-size:11px">${s.sector}</td>
+              <td>${pct(s.outperform_prob)}</td>
+              <td><span class="badge ${(s.signal||'pass').toLowerCase()}">${s.signal||'PASS'}</span></td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>`;
+    });
+  } catch(e) {
+    c.innerHTML = '<div class="loading">Error loading runs: ' + e.message + '</div>';
+  }
+}
+
+async function loadHistory() {
+  const tbody = document.getElementById('history-body');
+  if (!tbody.innerHTML.includes('Loading')) return;
+  try {
+    const data = await get('/api/history');
+    tbody.innerHTML = data.map(h => {
+      const prob = parseFloat(h.pred_prob || 0);
+      const ret  = parseFloat(h.fwd_6m_return || 0);
+      const out  = String(h.outperforms) === '1';
+      const cor  = String(h.correct) === '1';
+      return `<tr>
+        <td style="font-weight:600;cursor:pointer" onclick="openModal('${h.ticker}')">${h.ticker}</td>
+        <td style="color:#6b7280;font-size:11px">${h.sector}</td>
+        <td style="color:#6b7280">${String(h.date).slice(0,10)}</td>
+        <td>${pct(prob)}${prob>=0.65?'<span class="badge strong" style="margin-left:4px;font-size:8px">HC</span>':''}</td>
+        <td>${ret>=0?'+':''}${(ret*100).toFixed(1)}%</td>
+        <td class="${out?'correct':'wrong'}">${out?'✓':'✗'}</td>
+        <td class="${cor?'correct':'wrong'}">${cor?'✓':'✗'}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" class="loading">Error: ' + e.message + '</td></tr>';
+  }
+}
+
+async function runPipeline() {
+  const btn = document.getElementById('run-btn');
+  const log = document.getElementById('log-box');
+  const status = document.getElementById('run-status');
+  btn.disabled = true; log.textContent = ''; status.textContent = 'Starting...';
+  try {
+    await post('/api/run', {});
+    status.textContent = 'Running...';
+    runPoll = setInterval(async () => {
+      const data = await get('/api/run/status');
+      log.textContent = (data.log || []).join('\n');
+      log.scrollTop = log.scrollHeight;
+      if (!data.running) {
+        clearInterval(runPoll);
+        btn.disabled = false; status.textContent = 'Done!';
+        await loadPredictions(); loadRuns();
+      }
+    }, 2000);
+  } catch(e) {
+    status.textContent = 'Error: ' + e.message; btn.disabled = false;
+  }
+}
+
+savePortfolio();
+loadPredictions();
+</script>
+</body>
+</html>
